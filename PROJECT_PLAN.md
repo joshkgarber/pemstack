@@ -65,7 +65,6 @@ enablement-repo/
 │   │       └── editor-view.js      # Generic entity editor
 │   └── public/
 │       └── (empty)
-├── enablement_content_repo_schema.md   # Source schema
 └── PROJECT_PLAN.md                   # This file
 ```
 
