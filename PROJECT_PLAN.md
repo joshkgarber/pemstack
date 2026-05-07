@@ -1,4 +1,4 @@
-# Enablement Content Repository — Project Plan
+# pemstack — Enablement Content Repository — Project Plan
 
 ## 1. Overview
 Build a foundation web app for a **Platform Enablement Manager** to record and manage enablement content discovered during the **needs assessment** and **discovery** phases of projects.
@@ -15,7 +15,7 @@ Build a foundation web app for a **Platform Enablement Manager** to record and m
 ## 2. Project Structure (Monorepo)
 
 ```
-enablement-repo/
+pemstack/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
