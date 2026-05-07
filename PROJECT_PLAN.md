@@ -72,7 +72,7 @@ enablement-repo/
 
 ## 3. Database Schema (SQLite + SQLAlchemy)
 
-Normalized relational design mapped from the Pydantic schema.
+Normalized relational design mapped from the original schema idea.
 
 ### Tables
 
