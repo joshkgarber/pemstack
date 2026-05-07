@@ -78,18 +78,22 @@ Normalized relational design mapped from the original schema idea.
 
 | Table | Key Columns | Relationships |
 |-------|-------------|---------------|
-| **use_cases** | `id` (PK, UUID/string), `name`, `description`, `created_at`, `updated_at` | 1:N personas, goals, actions |
-| **personas** | `id`, `use_case_id` (FK), `name`, `description` | M:N goals via `persona_goals` |
-| **goals** | `id`, `use_case_id` (FK), `name`, `description` | 1:N success_criteria, adoption_metrics; M:N personas |
+| **use_cases** | `id` (PK, UUID/string), `name`, `description`, `created_at`, `updated_at` | M:N personas, goals, actions via association tables |
+| **personas** | `id`, `name`, `description` | M:N goals via `persona_goals`; M:N use cases via `use_case_personas` |
+| **goals** | `id`, `name`, `description` | 1:N success_criteria, adoption_metrics; M:N personas; M:N use cases via `use_case_goals` |
 | **success_criteria** | `id`, `goal_id` (FK), `text` | Belongs to goal |
-| **actions** | `id`, `use_case_id` (FK), `text`, `image_url` | Belongs to use case |
+| **actions** | `id`, `text`, `image_url` | M:N use cases via `use_case_actions` |
 | **adoption_metrics** | `id`, `goal_id` (FK), `name`, `description` | Belongs to goal |
+| **use_case_personas** | `use_case_id`, `persona_id` | Association table |
+| **use_case_goals** | `use_case_id`, `goal_id` | Association table |
+| **use_case_actions** | `use_case_id`, `action_id` | Association table |
 | **persona_goals** | `persona_id`, `goal_id` | Association table |
 
 ### Design Notes
 - `id` fields use UUID strings (generated client-side or server-side; server-side is simpler for MVP).
 - `success_criteria` is broken out into its own table (1:N) to allow future editing of individual criteria.
-- `persona_goals` association captures which goals are relevant to which persona within a use case.
+- Association tables (`use_case_personas`, `use_case_goals`, `use_case_actions`) relate one or more personas, goals, and actions to each use case without placing a foreign key on the child tables.
+- `persona_goals` captures which goals are relevant to which persona.
 - SQLite will store UUIDs as `TEXT`. JSON support available if needed, but we stay normalized for relational integrity.
 
 ---
@@ -106,12 +110,15 @@ Normalized relational design mapped from the original schema idea.
 | Use Cases | GET/POST | `/use-cases` | List all; create new |
 | Use Case | GET/PUT/DELETE | `/use-cases/{id}` | Read, update, delete (cascade) |
 | Use Case nested | GET | `/use-cases/{id}/full` | Fetch with nested personas, goals, actions |
-| Personas | GET/POST | `/personas` | List (optionally filter by `?use_case_id=`); create |
+| Personas | GET/POST | `/personas` | List all; create |
 | Persona | GET/PUT/DELETE | `/personas/{id}` | CRUD |
-| Goals | GET/POST | `/goals` | List (filter by `?use_case_id=`); create |
+| Use Case Personas | GET/POST | `/use-cases/{id}/personas` | List personas linked to use case; link a persona |
+| Goals | GET/POST | `/goals` | List all; create |
 | Goal | GET/PUT/DELETE | `/goals/{id}` | CRUD |
-| Actions | GET/POST | `/actions` | List (filter by `?use_case_id=`); create |
+| Use Case Goals | GET/POST | `/use-cases/{id}/goals` | List goals linked to use case; link a goal |
+| Actions | GET/POST | `/actions` | List all; create |
 | Action | GET/PUT/DELETE | `/actions/{id}` | CRUD |
+| Use Case Actions | GET/POST | `/use-cases/{id}/actions` | List actions linked to use case; link an action |
 | Adoption Metrics | GET/POST | `/adoption-metrics` | List (filter by `?goal_id=`); create |
 | Adoption Metric | GET/PUT/DELETE | `/adoption-metrics/{id}` | CRUD |
 | Success Criteria | GET/POST | `/success-criteria` | List (filter by `?goal_id=`); create |
@@ -159,8 +166,17 @@ Each major entity gets a **list** component and a **form** component.
 | `#/use-cases/{id}` | UseCase detail |
 | `#/use-cases/{id}/edit` | Edit use case |
 | `#/personas` | Persona list (all) |
+| `#/personas/new` | Create persona |
+| `#/personas/{id}` | Persona detail |
+| `#/personas/{id}/edit` | Edit persona |
 | `#/goals` | Goal list (all) |
+| `#/goals/new` | Create goal |
+| `#/goals/{id}` | Goal detail |
+| `#/goals/{id}/edit` | Edit goal |
 | `#/actions` | Action list (all) |
+| `#/actions/new` | Create action |
+| `#/actions/{id}` | Action detail |
+| `#/actions/{id}/edit` | Edit action |
 
 ### API Client (`api-client.js`)
 Thin wrapper around `fetch`:
@@ -275,8 +291,8 @@ FastAPI can optionally serve `frontend/dist` via `StaticFiles` for a single-proc
 | Schema Model | DB Table(s) | API Resource | Frontend Component(s) |
 |--------------|-------------|--------------|----------------------|
 | `UseCase` | `use_cases` | `/use-cases` | `use-case-list`, `use-case-form`, `use-case-detail` |
-| `Persona` | `personas` + `persona_goals` | `/personas` | `persona-list`, `persona-form` |
-| `Goal` | `goals` | `/goals` | `goal-list`, `goal-form` |
-| `Action` | `actions` | `/actions` | `action-list`, `action-form` |
+| `Persona` | `personas`, `use_case_personas`, `persona_goals` | `/personas` | `persona-list`, `persona-form` |
+| `Goal` | `goals`, `use_case_goals` | `/goals` | `goal-list`, `goal-form` |
+| `Action` | `actions`, `use_case_actions` | `/actions` | `action-list`, `action-form` |
 | `AdMet` | `adoption_metrics` | `/adoption-metrics` | `adoption-metric-list`, `adoption-metric-form` |
 | `success_criteria` (field) | `success_criteria` | `/success-criteria` | Inline in `goal-form` |
