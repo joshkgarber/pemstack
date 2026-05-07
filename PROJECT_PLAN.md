@@ -250,7 +250,7 @@ FastAPI can optionally serve `frontend/dist` via `StaticFiles` for a single-proc
 
 ---
 
-## 8. Phase 1 Deliverables (This Engagement)
+## 8. Phase 1 Deliverables
 
 1. **Backend foundation**
    - [ ] SQLite database with all tables and relationships.
